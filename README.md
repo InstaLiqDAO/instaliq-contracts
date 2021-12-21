@@ -4,6 +4,8 @@ This repo is for the development, testing, and deployment of InstaLiq smart cont
 
 The project is bootstrapped with Hardhat, leaving the boostrap files and instructions for 'Advanced Sample Hardhat Project' below for now until project-specific contracts/workflows/instructions are in place.
 
+Contract interface draft doc: https://docs.google.com/document/d/1LwvUtN4gmNsntLY7bumD1HFZta9fJeJA3MxX17SMMrk/edit?usp=sharing
+
 # Advanced Sample Hardhat Project
 
 This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
