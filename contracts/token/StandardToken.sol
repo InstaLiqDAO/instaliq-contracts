@@ -39,20 +39,15 @@ contract StandardToken is ERC20 {
     }
 
     /**
-     * @dev Mints the supply of this token. dests and amounts variables represent a mapping
-     * of addresses to token balances determined by the InitialLiquidityPool deploying this
-     * token contract. 
+     * @dev Mints the amount of tokens for the claimant.
      *
-     * Requires that the deployer of this contract also mints and can only mint the supply once.
+     * Only the initializing contract, which should be an InitialLiquidityPool,
+     * can call this function to create tokens based on bids placed during ILS.
      */
-    function mintSupply(address[] calldata dests, uint256[] calldata amounts) public returns (bool) {
+    function claimTokens(address claimant, uint256 amount) external returns (bool) {
         require(_msgSender() == _initializer, "initializer must be sender");
-        require(dests.length == amounts.length, "amounts and dests do not map");
-        require(totalSupply() == 0, "supply already minted");
 
-        for (uint256 i = 0; i < dests.length; i++) {
-            _mint(dests[i], amounts[i]);
-        }
+        _mint(claimant, amount);
 
         return true;
     }
