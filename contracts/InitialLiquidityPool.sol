@@ -94,4 +94,13 @@ contract InitialLiquidityPool is IInitialLiquidityPool {
     function initialLiquiditySwap() external returns (bool) {
         return true;
     }
+
+    /**
+    * @dev Mints tokens to send to claimants who had bids at ILS
+    *
+    * Emits a {Transfer} event from underlying ERC20 contract
+    */
+    function claimTokens() external returns (uint256) {
+        return 0;
+    }
 }

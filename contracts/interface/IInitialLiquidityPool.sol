@@ -45,6 +45,13 @@ interface IInitialLiquidityPool {
     function initialLiquiditySwap() external returns (bool);
 
     /**
+    * @dev Mints tokens to send to claimants who had bids at ILS
+    *
+    * Emits a {Transfer} event from underlying ERC20 contract
+    */
+    function claimTokens() external returns (uint256);
+
+    /**
      * @dev Emitted when the a bid is placed.
      */
     event BidPlaced(address indexed owner, uint256 amount);
