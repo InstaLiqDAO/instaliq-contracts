@@ -16,9 +16,9 @@ contract StandardToken is ERC20 {
      * All of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(string memory name_, string memory symbol_, uint8 decimals_, address initializer_) ERC20(name_, symbol_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20(name_, symbol_) {
         _decimals = decimals_;
-        _initializer = initializer_;
+        _initializer = _msgSender();
     }
 
     /**
@@ -36,6 +36,16 @@ contract StandardToken is ERC20 {
      */
     function decimals() public view override returns (uint8) {
         return _decimals;
+    }
+
+    function mintLiquidityPoolSupply(uint256 amount) external returns (bool) {
+        address sender = _msgSender();
+        require(totalSupply() == 0, "liquidity supply already minted");
+        require(sender == _initializer, "initializer must be sender");
+
+        _mint(sender, amount);
+
+        return true;
     }
 
     /**
