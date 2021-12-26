@@ -1,5 +1,6 @@
 pragma solidity ^0.8.0;
 
+import "../token/StandardToken.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
@@ -22,6 +23,8 @@ interface IInitialLiquidityPool {
     function currentPrice() external view returns (uint256);
 
     function totalBid() external view returns (uint256);
+
+    function launchedToken() external view returns (StandardToken);
 
     /**
      * @dev Places a bid for the specified amount

@@ -2,12 +2,13 @@ pragma solidity ^0.8.0;
 
 import "./interface/IInitialLiquidityPool.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
  * @dev Bidding pool for token launches implementing the Initial Liquidity Swap
  *
  */
-contract InitialLiquidityPool is IInitialLiquidityPool {
+contract InitialLiquidityPool is Context, IInitialLiquidityPool {
 
     string private _name;
     string private _symbol;
@@ -18,6 +19,7 @@ contract InitialLiquidityPool is IInitialLiquidityPool {
 
     mapping(address => uint256) private _bids;
     uint256 private _totalBid = 0;
+    StandardToken private _launchedToken;
 
     constructor(
         string memory name_,
@@ -59,6 +61,10 @@ contract InitialLiquidityPool is IInitialLiquidityPool {
         return _devReserveTokenNumber;
     }
 
+    function launchedToken() external view returns (StandardToken) {
+        return _launchedToken;
+    }
+
     function currentPrice() external view returns (uint256) {
         uint8 decimals = _referenceToken.decimals();
         return (_totalBid / _totalSupply) / 10 ** decimals;
@@ -74,6 +80,12 @@ contract InitialLiquidityPool is IInitialLiquidityPool {
      * Emits a {BidPlaced} event.
      */
     function placeBid(uint256 amount) external returns (bool) {
+        _bids[_msgSender()] += amount;
+        _totalBid += amount;
+        _referenceToken.transferFrom(_msgSender(), address(this), amount);
+
+        emit BidPlaced(_msgSender(), amount);
+
         return true;
     }
 
@@ -83,6 +95,14 @@ contract InitialLiquidityPool is IInitialLiquidityPool {
      * Emits a {BidWithdrawn} event.
      */
     function withdrawBid(uint256 amount) external returns (bool) {
+        uint256 existingBid = _bids[_msgSender()];
+        require(existingBid >= amount, "amount not available to withdraw");
+        _bids[_msgSender()] -= amount;
+        _totalBid -= amount;
+        _referenceToken.transfer(_msgSender(), amount);
+        
+        emit BidWithdrawn(_msgSender(), amount);
+
         return true;
     }
 
