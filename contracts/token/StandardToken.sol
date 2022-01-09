@@ -1,12 +1,17 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @dev Extension of OpenZeppelin {ERC20}.
  *
  */
-contract StandardToken is ERC20 {
+contract StandardToken is ERC20, AccessControl {
+
+    bytes32 public constant SUPPLY_CONTROLLER = keccak256("SUPPLY_CONTROLLER");
+    
     uint8 private _decimals;
     address private _initializer;
 
@@ -18,7 +23,9 @@ contract StandardToken is ERC20 {
      */
     constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20(name_, symbol_) {
         _decimals = decimals_;
-        _initializer = _msgSender();
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setRoleAdmin(SUPPLY_CONTROLLER, DEFAULT_ADMIN_ROLE);
+        _grantRole(SUPPLY_CONTROLLER, _msgSender());
     }
 
     /**
@@ -38,26 +45,14 @@ contract StandardToken is ERC20 {
         return _decimals;
     }
 
-    function mintLiquidityPoolSupply(uint256 amount) external returns (bool) {
-        address sender = _msgSender();
-        require(totalSupply() == 0, "liquidity supply already minted");
-        require(sender == _initializer, "initializer must be sender");
-
-        _mint(sender, amount);
+    function mint(address destination, uint256 amount) external onlyRole(SUPPLY_CONTROLLER) returns (bool) {
+        _mint(destination, amount);
 
         return true;
     }
 
-    /**
-     * @dev Mints the amount of tokens for the claimant.
-     *
-     * Only the initializing contract, which should be an InitialLiquidityPool,
-     * can call this function to create tokens based on bids placed during ILS.
-     */
-    function claimTokens(address claimant, uint256 amount) external returns (bool) {
-        require(_msgSender() == _initializer, "initializer must be sender");
-
-        _mint(claimant, amount);
+    function burn(address destination, uint256 amount) external onlyRole(SUPPLY_CONTROLLER) returns (bool) {
+        _mint(destination, amount);
 
         return true;
     }

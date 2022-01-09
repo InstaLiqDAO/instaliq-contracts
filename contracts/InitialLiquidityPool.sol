@@ -2,9 +2,9 @@ pragma solidity ^0.8.0;
 
 import "./interface/IInitialLiquidityPool.sol";
 import "./token/StandardToken.sol";
+import "./interface/ISushiSwap.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@sushiswap/core/contracts/uniswapv2/UniswapV2Router02.sol";
 
 /**
  * @dev Bidding pool for token launches implementing the Initial Liquidity Swap
@@ -46,39 +46,39 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         _sushiswapRouter = sushiswapRouter_;
     }
 
-    function name() external view returns (string memory) {
+    function name() external override view returns (string memory) {
         return _name;
     }
 
-    function symbol() external view returns (string memory) {
+    function symbol() external override view returns (string memory) {
         return _symbol;
     }
 
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() external override view returns (uint256) {
         return _totalSupply;
     }
 
-    function referenceToken() external view returns (address) {
+    function referenceToken() external override view returns (address) {
         return _referenceToken;
     }
 
-    function ilsPeriodEnd() external view returns (uint256) {
+    function ilsPeriodEnd() external override view returns (uint256) {
         return _ilsPeriodEnd;
     }
 
-    function devReserveTokenNumber() external view returns (uint256) {
+    function devReserveTokenNumber() external override view returns (uint256) {
         return _devReserveTokenNumber;
     }
 
-    function launchedToken() external view returns (address) {
+    function launchedToken() external override view returns (address) {
         return _launchedToken;
     }
 
-    function currentPrice() external view returns (uint256) {
+    function currentPrice() external override view returns (uint256) {
         return _totalBid / _totalSupply;
     }
 
-    function totalBid() external view returns (uint256) {
+    function totalBid() external override view returns (uint256) {
         return _totalBid;
     }
 
@@ -87,8 +87,8 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
      *
      * Emits a {BidPlaced} event.
      */
-    function placeBid(uint256 amount) external returns (bool) {
-        require (!ilsComplete, "ILS has occurred");
+    function placeBid(uint256 amount) override external returns (bool) {
+        require (!_ilsComplete, "ILS has occurred");
         _bids[_msgSender()] += amount;
         _totalBid += amount;
         ERC20(_referenceToken).transferFrom(_msgSender(), address(this), amount);
@@ -103,8 +103,8 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
      *
      * Emits a {BidWithdrawn} event.
      */
-    function withdrawBid(uint256 amount) external returns (bool) {
-        require (!ilsComplete, "ILS has occurred");
+    function withdrawBid(uint256 amount) override external returns (bool) {
+        require (!_ilsComplete, "ILS has occurred");
         uint256 existingBid = _bids[_msgSender()];
         require(existingBid >= amount, "amount not available to withdraw");
         _bids[_msgSender()] -= amount;
@@ -121,22 +121,22 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
      *
      * Emits a {InitialLiquiditySwap} event.
      */
-    function initialLiquiditySwap() external returns (bool) {
-        require (!ilsComplete, "ILS already occurred");
+    function initialLiquiditySwap() override external returns (bool) {
+        require (!_ilsComplete, "ILS already occurred");
         StandardToken newToken = new StandardToken(_name, _symbol, _decimals);
         ERC20 referenceToken = ERC20(_referenceToken);
         _launchedToken = address(newToken);
         uint256 liqPoolNewTokenSupply = (_totalSupply - _devReserveTokenNumber)/2;
-        newToken.mintLiquidityPoolSupply(liqPoolNewTokenSupply);
+        newToken.mint(address(this), liqPoolNewTokenSupply);
 
-        sushiswapRouter = UniswapV2Router02(_sushiswapPairFactory);
+        IUniswapV2Router02 sushiswapRouter = IUniswapV2Router02(_sushiswapRouter);
         newToken.approve(address(this), liqPoolNewTokenSupply);
         referenceToken.approve(address(this), _totalBid);
         
         // Currently locking LP tokens into this contract (burned)
         sushiswapRouter.addLiquidity(
             _launchedToken,
-            _referenceToken, 
+            _referenceToken,
             liqPoolNewTokenSupply,
             _totalBid,
             liqPoolNewTokenSupply,
@@ -156,8 +156,8 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
     *
     * Emits a {Transfer} event from underlying ERC20 contract   `
     */
-    function claimTokens() external returns (uint256) {
-        require(ilsComplete, "ILS has not occurred yet");
+    function claimTokens() override external returns (uint256) {
+        require(_ilsComplete, "ILS has not occurred yet");
 
         return 0;
     }

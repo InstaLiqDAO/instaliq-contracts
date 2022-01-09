@@ -1,5 +1,4 @@
 import { ethers } from 'hardhat';
-import { getRandomWallet } from '../utils/mock-utils';
 
 async function main() {
   const standardTokenContractFactory = await ethers.getContractFactory(
@@ -9,8 +8,7 @@ async function main() {
   const standardToken = await standardTokenContractFactory.deploy(
     'NewToken',
     'NTKN',
-    18,
-    getRandomWallet().address
+    18
   );
 
   await standardToken.deployed();

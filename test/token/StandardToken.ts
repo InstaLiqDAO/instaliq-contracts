@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { getRandomWallet } from '../../utils/mock-utils';
 
 describe('StandardToken', function () {
   it('Should be initialized properly after deploy', async function () {
@@ -10,8 +9,7 @@ describe('StandardToken', function () {
     const standardToken = await standardTokenContractFactory.deploy(
       'NewToken',
       'NTKN',
-      18,
-      getRandomWallet().address
+      18
     );
 
     await standardToken.deployed();
