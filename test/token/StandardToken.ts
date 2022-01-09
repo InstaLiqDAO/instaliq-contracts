@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
 describe('StandardToken', function () {
-  it('Should be initialized properly after deploy', async function () {
+  it('Should be initialized properly after deploy ', async function () {
     const standardTokenContractFactory = await ethers.getContractFactory(
       'StandardToken'
     );
