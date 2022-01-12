@@ -82,6 +82,14 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         return _totalBid;
     }
 
+    function getBid() external view returns (uint256) {
+        return _bids[_msgSender()];
+    }
+
+    function ilsComplete() external view returns (bool) {
+        return _ilsComplete;
+    }
+
     /**
      * @dev Places a bid for the specified amount
      *
@@ -130,8 +138,8 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         newToken.mint(address(this), liqPoolNewTokenSupply);
 
         IUniswapV2Router02 sushiswapRouter = IUniswapV2Router02(_sushiswapRouter);
-        newToken.approve(address(this), liqPoolNewTokenSupply);
-        referenceToken.approve(address(this), _totalBid);
+        newToken.approve(_sushiswapRouter, liqPoolNewTokenSupply);
+        referenceToken.approve(_sushiswapRouter, _totalBid);
         
         // Currently locking LP tokens into this contract (burned)
         sushiswapRouter.addLiquidity(
