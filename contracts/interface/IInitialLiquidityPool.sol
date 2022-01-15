@@ -49,7 +49,7 @@ interface IInitialLiquidityPool {
     *
     * Emits a {Transfer} event from underlying ERC20 contract
     */
-    function claimTokens() external returns (uint256);
+    function claimTokens() external returns (bool);
 
     /**
      * @dev Emitted when the a bid is placed.
@@ -62,7 +62,7 @@ interface IInitialLiquidityPool {
     event BidWithdrawn(address indexed owner, uint256 amount);
 
     /**
-     * @dev Emitted when the a bid is withdrawn.
+     * @dev Emitted when a swap happens.
      */
     event InitialLiquiditySwap(address indexed newToken);
 }

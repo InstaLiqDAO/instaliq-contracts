@@ -5,6 +5,7 @@ import "./token/StandardToken.sol";
 import "./interface/ISushiSwap.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "./library/ABDKMathQuad.sol";
 
 /**
  * @dev Bidding pool for token launches implementing the Initial Liquidity Swap
@@ -160,13 +161,34 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
     }
 
     /**
-    * @dev Mints tokens to send to claimants who had bids at IL`        S
+    * @dev Mints tokens to send to claimants who had bids at ILS
     *
     * Emits a {Transfer} event from underlying ERC20 contract   `
     */
-    function claimTokens() override external returns (uint256) {
+    function claimTokens() override external returns (bool) {
         require(_ilsComplete, "ILS has not occurred yet");
 
-        return 0;
+        uint256 existingBid = _bids[_msgSender()];
+
+        require(existingBid > 0,"Token bid unavailable");
+        
+        uint256 tokenAmount = getTokenAmnt(existingBid,_totalBid,_totalSupply);
+
+        StandardToken standardToken;
+        standardToken.mint(_msgSender(),tokenAmount);
+
+        return true;
+
+    }
+
+    
+    function getTokenAmnt (uint existingBidAmnt,uint totalBidAmnt,uint totalTokenSupply) private pure returns (uint) {
+
+        uint tokenFraction = ABDKMathQuad.toUInt(ABDKMathQuad.div(ABDKMathQuad.fromUInt(existingBidAmnt),ABDKMathQuad.fromUInt(totalBidAmnt)));
+        uint claimableAmnt = ABDKMathQuad.toUInt(ABDKMathQuad.mul(ABDKMathQuad.fromUInt(tokenFraction),ABDKMathQuad.fromUInt(totalTokenSupply)));
+
+    return claimableAmnt;
+        
     }
 }
+
