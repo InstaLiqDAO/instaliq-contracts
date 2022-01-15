@@ -165,7 +165,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
     *
     * Emits a {Transfer} event from underlying ERC20 contract   `
     */
-    function claimTokens() override external returns (uint) {
+    function claimTokens() override external returns (bool) {
         require(_ilsComplete, "ILS has not occurred yet");
 
         uint256 existingBid = _bids[_msgSender()];
@@ -174,26 +174,21 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         
         uint256 tokenAmount = getTokenAmnt(existingBid,_totalBid,_totalSupply);
 
-        //TO DO : - Transfer tokenAmount to msg.sender;
+        StandardToken standardToken;
+        standardToken.mint(_msgSender(),tokenAmount);
 
-        return tokenAmount;
-        
+        return true;
+
     }
 
     
-    function getTokenAmnt (uint x , uint y,uint z) private pure returns (uint) {
-    return 
-        ABDKMathQuad.toUInt(
-        ABDKMathQuad.mul(
-            ABDKMathQuad.mul(
-                ABDKMathQuad.div(
-                    ABDKMathQuad.fromUInt(x), 
-                    ABDKMathQuad.fromUInt(y)
-                ),ABDKMathQuad.fromUInt(100)),
-            ABDKMathQuad.fromUInt(z)
-        )
-        );
+    function getTokenAmnt (uint existingBidAmnt,uint totalBidAmnt,uint totalTokenSupply) private pure returns (uint) {
 
+        uint tokenFraction = ABDKMathQuad.toUInt(ABDKMathQuad.div(ABDKMathQuad.fromUInt(existingBidAmnt),ABDKMathQuad.fromUInt(totalBidAmnt)));
+        uint claimableAmnt = ABDKMathQuad.toUInt(ABDKMathQuad.mul(ABDKMathQuad.fromUInt(tokenFraction),ABDKMathQuad.fromUInt(totalTokenSupply)));
+
+    return claimableAmnt;
+        
     }
 }
 
