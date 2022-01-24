@@ -132,6 +132,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
      */
     function initialLiquiditySwap() override external returns (bool) {
         require (!_ilsComplete, "ILS already occurred");
+        require (block.timestamp > _ilsPeriodEnd, "ILS date not yet reached");
         StandardToken newToken = new StandardToken(_name, _symbol, _decimals);
         ERC20 referenceToken = ERC20(_referenceToken);
         _launchedToken = address(newToken);
