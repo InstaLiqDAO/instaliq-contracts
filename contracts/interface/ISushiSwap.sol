@@ -9,6 +9,11 @@ interface IUniswapV2Router02  {
         uint amountBDesired,
         uint amountAMin,
         uint amountBMin,
-        address to
+        address to,
+        uint deadline
     ) external returns (uint amountA, uint amountB);
+}
+
+interface IUniswapV2Factory {
+    function createPair(address tokenA, address tokenB) external returns (address pair);
 }

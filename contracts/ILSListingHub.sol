@@ -10,9 +10,11 @@ import "./InitialLiquidityPool.sol";
 contract ILSListingHub is Context {
     address[] private _listings;
     address private  _sushiswapRouter;
+    address private _sushiswapFactory;
 
-    constructor(address sushiswapRouter_) {
+    constructor(address sushiswapRouter_, address sushiswapFactory_) {
         _sushiswapRouter = sushiswapRouter_;
+        _sushiswapFactory = sushiswapFactory_;
     }
 
     function createInitialLiquidityPool(
@@ -32,7 +34,8 @@ contract ILSListingHub is Context {
             referenceToken,
             ilsPeriodEnd,
             devReserveTokenNumber,
-            _sushiswapRouter
+            _sushiswapRouter,
+            _sushiswapFactory
         );
         _listings.push(address(newPool));
         return address(newPool);

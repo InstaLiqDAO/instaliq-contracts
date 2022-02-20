@@ -6,6 +6,7 @@ describe('InitialLiquidityPool', function () {
   let initialLiquidityPool: Contract;
   let referenceToken: Contract;
   let sushiswapRouter: Contract;
+  let sushiswapFactory: Contract;
   let signer: Signer;
 
   const totalSupply = 1000;
@@ -18,10 +19,16 @@ describe('InitialLiquidityPool', function () {
     referenceToken = await standardTokenFactory.deploy('NewToken', 'NTKN', 18);
     await referenceToken.deployed();
 
+    const sushiswapFactoryFactory = await ethers.getContractFactory(
+      'MockSushiswapFactory'
+    );
+    sushiswapFactory = await sushiswapFactoryFactory.deploy();
+    await sushiswapFactory.deployed();
+
     const sushiswapRouterFactory = await ethers.getContractFactory(
       'MockSushiswapRouter'
     );
-    sushiswapRouter = await sushiswapRouterFactory.deploy();
+    sushiswapRouter = await sushiswapRouterFactory.deploy(sushiswapFactory.address);
     await sushiswapRouter.deployed();
 
     const ilsContractFactory = await ethers.getContractFactory(
@@ -35,7 +42,8 @@ describe('InitialLiquidityPool', function () {
       referenceToken.address,
       Date.now() - 1000,
       0,
-      sushiswapRouter.address
+      sushiswapRouter.address,
+      sushiswapFactory.address
     );
     await initialLiquidityPool.deployed();
     signer = initialLiquidityPool.signer;
@@ -85,7 +93,7 @@ describe('InitialLiquidityPool', function () {
     expect(await newToken.totalSupply()).to.equal(totalSupply/2);
 
     // liquidity added to DEX correctly
-    expect(await referenceToken.balanceOf(sushiswapRouter.address)).to.equal(totalBid);
-    expect(await newToken.balanceOf(sushiswapRouter.address)).to.equal(totalSupply/2);
+    expect(await referenceToken.balanceOf(sushiswapFactory.address)).to.equal(totalBid);
+    expect(await newToken.balanceOf(sushiswapFactory.address)).to.equal(totalSupply/2);
   });
 });
