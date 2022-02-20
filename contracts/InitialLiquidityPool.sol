@@ -21,6 +21,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
     uint256 private _ilsPeriodEnd;
     uint256 private _devReserveTokenNumber;
     address private _sushiswapRouter;
+    address private _sushiswapFactory;
 
     mapping(address => uint256) private _bids;
     uint256 private _totalBid = 0;
@@ -35,7 +36,8 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         address referenceToken_,
         uint256 ilsPeriodEnd_,
         uint256 devReserveTokenNumber_,
-        address sushiswapRouter_
+        address sushiswapRouter_,
+        address sushiswapFactory_
     ) {
         _name = name_;
         _symbol = symbol_;
@@ -45,6 +47,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         _ilsPeriodEnd = ilsPeriodEnd_;
         _devReserveTokenNumber = devReserveTokenNumber_;
         _sushiswapRouter = sushiswapRouter_;
+        _sushiswapFactory = sushiswapFactory_;
     }
 
     function name() external override view returns (string memory) {
@@ -115,7 +118,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
     function withdrawBid(uint256 amount) override external returns (bool) {
         require (!_ilsComplete, "ILS has occurred");
         uint256 existingBid = _bids[_msgSender()];
-        require(existingBid >= amount, "amount not available to withdraw");
+        require(existingBid > 0 && existingBid >= amount, "bad amount");
         _bids[_msgSender()] -= amount;
         _totalBid -= amount;
         ERC20(_referenceToken).transfer(_msgSender(), amount);
@@ -132,18 +135,21 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
      */
     function initialLiquiditySwap() override external returns (bool) {
         require (!_ilsComplete, "ILS already occurred");
-        require (block.timestamp > _ilsPeriodEnd, "ILS date not yet reached");
+        //require (block.timestamp > _ilsPeriodEnd, "ILS date not yet reached");
         StandardToken newToken = new StandardToken(_name, _symbol, _decimals);
         ERC20 referenceToken = ERC20(_referenceToken);
         _launchedToken = address(newToken);
         uint256 liqPoolNewTokenSupply = (_totalSupply - _devReserveTokenNumber)/2;
         newToken.mint(address(this), liqPoolNewTokenSupply);
 
+        IUniswapV2Factory sushiswapFactory = IUniswapV2Factory(_sushiswapFactory);
+        address newPair = sushiswapFactory.createPair(_launchedToken, _referenceToken);
+
         IUniswapV2Router02 sushiswapRouter = IUniswapV2Router02(_sushiswapRouter);
         newToken.approve(_sushiswapRouter, liqPoolNewTokenSupply);
         referenceToken.approve(_sushiswapRouter, _totalBid);
         
-        // Currently locking LP tokens into this contract (burned)
+        // // Currently locking LP tokens into this contract (burned)
         sushiswapRouter.addLiquidity(
             _launchedToken,
             _referenceToken,
@@ -151,7 +157,8 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
             _totalBid,
             liqPoolNewTokenSupply,
             _totalBid,
-            address(this)
+            address(this),
+            block.timestamp + 10000
         );
 
         // TODO: Do something with the dev supply
@@ -188,7 +195,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         uint tokenFraction = ABDKMathQuad.toUInt(ABDKMathQuad.div(ABDKMathQuad.fromUInt(existingBidAmnt),ABDKMathQuad.fromUInt(totalBidAmnt)));
         uint claimableAmnt = ABDKMathQuad.toUInt(ABDKMathQuad.mul(ABDKMathQuad.fromUInt(tokenFraction),ABDKMathQuad.fromUInt(totalTokenSupply)));
 
-    return claimableAmnt;
+        return claimableAmnt;
         
     }
 }
