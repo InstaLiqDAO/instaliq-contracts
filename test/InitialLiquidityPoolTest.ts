@@ -12,7 +12,8 @@ describe('InitialLiquidityPool', function () {
   const totalSupply = 1000;
 
   beforeEach(async () => {
-    await ethers.provider.send('evm_setNextBlockTimestamp', [Date.now()]); 
+    const now = Math.floor(Date.now()/1000);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [now]); 
     const standardTokenFactory = await ethers.getContractFactory(
       'StandardToken'
     );
@@ -40,7 +41,7 @@ describe('InitialLiquidityPool', function () {
       totalSupply,
       0,
       referenceToken.address,
-      Date.now() - 1000,
+      now - 1000,
       0,
       sushiswapRouter.address,
       sushiswapFactory.address

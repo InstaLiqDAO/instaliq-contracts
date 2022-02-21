@@ -27,6 +27,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
     uint256 private _totalBid = 0;
     address private _launchedToken;
     bool private _ilsComplete;
+    address private _newPair;
 
     constructor(
         string memory name_,
@@ -94,6 +95,10 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         return _ilsComplete;
     }
 
+    function newPair() external view returns (address) {
+        return _newPair;
+    }
+
     /**
      * @dev Places a bid for the specified amount
      *
@@ -135,7 +140,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
      */
     function initialLiquiditySwap() override external returns (bool) {
         require (!_ilsComplete, "ILS already occurred");
-        //require (block.timestamp > _ilsPeriodEnd, "ILS date not yet reached");
+        require (block.timestamp > _ilsPeriodEnd, "ILS date not yet reached");
         StandardToken newToken = new StandardToken(_name, _symbol, _decimals);
         ERC20 referenceToken = ERC20(_referenceToken);
         _launchedToken = address(newToken);
@@ -143,7 +148,7 @@ contract InitialLiquidityPool is Context, IInitialLiquidityPool {
         newToken.mint(address(this), liqPoolNewTokenSupply);
 
         IUniswapV2Factory sushiswapFactory = IUniswapV2Factory(_sushiswapFactory);
-        address newPair = sushiswapFactory.createPair(_launchedToken, _referenceToken);
+        _newPair = sushiswapFactory.createPair(_launchedToken, _referenceToken);
 
         IUniswapV2Router02 sushiswapRouter = IUniswapV2Router02(_sushiswapRouter);
         newToken.approve(_sushiswapRouter, liqPoolNewTokenSupply);
